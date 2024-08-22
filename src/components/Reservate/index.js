@@ -25,15 +25,20 @@ const Reservate = ({
     const navigate = useNavigate();
 
     const handleChange = ({ start, end }) => {
-        const newStartDate = start ? moment(start).format("MM/DD/YYYY") : startDate;
-        const newEndDate = end ? moment(end).format("MM/DD/YYYY") : endDate;
-        
-        if (newStartDate > newEndDate) {
-            setStartDate(newEndDate);
-            setEndDate(newStartDate);
-        } else {
-            setStartDate(newStartDate);
-            setEndDate(newEndDate);
+        try {
+            const newStartDate = start ? moment(start).format("MM/DD/YYYY") : startDate;
+            const newEndDate = end ? moment(end).format("MM/DD/YYYY") : endDate;
+            
+            if (newStartDate > newEndDate) {
+                setStartDate(newEndDate);
+                setEndDate(newStartDate);
+            } else {
+                setStartDate(newStartDate);
+                setEndDate(newEndDate);
+            }
+        } catch (error) {
+            console.error("An error occurred while changing dates:", error.message);
+            toast.error("Failed to update dates. Please try again.");
         }
     };
     
@@ -42,20 +47,25 @@ const Reservate = ({
     const handleChangeEnd = (date) => handleChange({ end: date });
 
     const handleReservate = () => {
-        if (startDate && endDate && adults && prices) {
-            if (max < adults) {
-                toast.warning(`Sorry, this room's limite is ${max}`);
+        try {
+            if (startDate && endDate && adults && prices) {
+                if (max < adults) {
+                    toast.warning(`Sorry, this room's limit is ${max}`);
+                } else {
+                    const firstDate = new Date(endDate);
+                    const lastDate = new Date(startDate);
+                    let times = firstDate.getTime() - lastDate.getTime();
+                    let days = Math.round(times / (1000 * 3600 * 24));
+                    days = Number(days) + 1;
+                    let count = Number(adults) * Number(prices) * Number(days);
+                    setSum(count);
+                }
             } else {
-                const firstDate = new Date(endDate);
-                const lastDate = new Date(startDate);
-                let times = firstDate.getTime() - lastDate.getTime();
-                let days = Math.round(times / (1000 * 3600 * 24));
-                days = Number(days) + 1;
-                let count = Number(adults) * Number(prices) * Number(days);
-                setSum(count);
+                toast.error("Please check your values");
             }
-        } else {
-            toast.error("Please check your values");
+        } catch (error) {
+            console.error("An error occurred during reservation:", error.message);
+            toast.error("Failed to complete reservation. Please try again.");
         }
     }
 
@@ -71,26 +81,26 @@ const Reservate = ({
                     {!sum ?
                         <>
                             <Form className="d-flex mb-4 align-center">
-                            <i className="bi bi-calendar-week-fill me-3"></i>
-                            <DatePicker
-                                className="me-2"
-                                selected={startDate}
-                                selectsStart
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChange={handleChangeStart}
-                            />
-                            <DatePicker
-                                selected={endDate}
-                                selectsEnd
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChange={handleChangeEnd}
-                            />
-                        </Form>
-                        <div className="d-flex align-center mb-4">
-                            <div className="d-flex align-center me-3">
-                                <Form.Label className="me-3"><i className="bi bi-person-fill-check"></i></Form.Label>
+                                <i className="bi bi-calendar-week-fill me-3"></i>
+                                <DatePicker
+                                    className="me-2"
+                                    selected={new Date(startDate)}
+                                    selectsStart
+                                    startDate={new Date(startDate)}
+                                    endDate={new Date(endDate)}
+                                    onChange={handleChangeStart}
+                                />
+                                <DatePicker
+                                    selected={new Date(endDate)}
+                                    selectsEnd
+                                    startDate={new Date(startDate)}
+                                    endDate={new Date(endDate)}
+                                    onChange={handleChangeEnd}
+                                />
+                            </Form>
+                            <div className="d-flex align-center mb-4">
+                                <div className="d-flex align-center me-3">
+                                    <Form.Label className="me-3"><i className="bi bi-person-fill-check"></i></Form.Label>
                                     <Form.Control
                                         className="input-bg me-2"
                                         type="number"
